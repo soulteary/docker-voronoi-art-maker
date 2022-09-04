@@ -20,7 +20,8 @@ def read_image(file_name):
 
 
 def get_representative_points(img, number_of_site_points):
-    segments_slic = slic(img, n_segments=number_of_site_points, compactness=10, sigma=1)
+    segments_slic = slic(
+        img, n_segments=number_of_site_points, compactness=10, sigma=1)
     print("SLIC number of segments: ", len(np.unique(segments_slic)))
 
     clusters = np.unique(segments_slic)
