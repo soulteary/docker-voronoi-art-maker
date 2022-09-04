@@ -14,31 +14,38 @@ using namespace std;
 
 ofstream fout("test.out");
 
-double sq(double val){
-    return val*val;
+double sq(double val)
+{
+    return val * val;
 }
 
-struct Point{
+struct Point
+{
 
-    double x,y;
-    Point(double _x = 0.0, double _y = 0.0){
+    double x, y;
+    Point(double _x = 0.0, double _y = 0.0)
+    {
         x = _x, y = _y;
     }
 
-    double dist(Point p){
+    double dist(Point p)
+    {
 
-        return sqrt(sq(x-p.x)+sq(y-p.y));
+        return sqrt(sq(x - p.x) + sq(y - p.y));
     }
 
-    void print(){
-        cout<<"("<<x<<","<<y<<")";
+    void print()
+    {
+        cout << "(" << x << "," << y << ")";
     }
 };
 
-Point findCentroid(vector<Point> points) {
+Point findCentroid(vector<Point> points)
+{
     double x = 0;
     double y = 0;
-    for (Point p : points) {
+    for (Point p : points)
+    {
         x += p.x;
         y += p.y;
     }
@@ -48,49 +55,56 @@ Point findCentroid(vector<Point> points) {
     return center;
 }
 
-double get_angle(Point p, Point centroid){
-    double a = atan2(centroid.y-p.y,centroid.x-p.x);
-    double a_deg = (180.0/PI)*a;
+double get_angle(Point p, Point centroid)
+{
+    double a = atan2(centroid.y - p.y, centroid.x - p.x);
+    double a_deg = (180.0 / PI) * a;
     return a_deg;
 }
 
-vector<Point> sortVerticies(vector<Point> points) {
+vector<Point> sortVerticies(vector<Point> points)
+{
     // get centroid
     Point center = findCentroid(points);
-    //center.print();
-    //cout<<"\n";
-    vector< pair<double,int> >angle_sorter;
+    // center.print();
+    // cout<<"\n";
+    vector<pair<double, int> > angle_sorter;
 
     int idx = 0;
-    for(Point p: points){
-        angle_sorter.push_back(make_pair(get_angle(p,center),idx));
-        idx = idx+1;
+    for (Point p : points)
+    {
+        angle_sorter.push_back(make_pair(get_angle(p, center), idx));
+        idx = idx + 1;
     }
 
-    //cout<<"angle push korsi\n";
+    // cout<<"angle push korsi\n";
 
-    sort(angle_sorter.begin(),angle_sorter.end());
+    sort(angle_sorter.begin(), angle_sorter.end());
 
-    vector<Point>sorted_points;
+    vector<Point> sorted_points;
 
     int cursz = 0;
 
-    for(auto info: angle_sorter){
+    for (auto info : angle_sorter)
+    {
         int id = info.second;
-        //cout<<id<<"\n";
+        // cout<<id<<"\n";
         Point cur = points[id];
-        //cur.print();
-        //cout<<"\n";
-        if(cursz>0){
-            Point last = sorted_points[cursz-1];
+        // cur.print();
+        // cout<<"\n";
+        if (cursz > 0)
+        {
+            Point last = sorted_points[cursz - 1];
             double dd = last.dist(cur);
 
-            if(dd>eps){
+            if (dd > eps)
+            {
                 sorted_points.push_back(cur);
                 cursz++;
             }
         }
-        else{
+        else
+        {
             sorted_points.push_back(cur);
             cursz++;
         }
@@ -99,14 +113,16 @@ vector<Point> sortVerticies(vector<Point> points) {
     return sorted_points;
 }
 
-struct Edge{
+struct Edge
+{
 
     Point st, ed;
-    double A,B,C; //Ax + By + C = 0
+    double A, B, C; // Ax + By + C = 0
     bool isVertical;
     bool isSegment;
 
-    Edge(Point a, Point b){
+    Edge(Point a, Point b)
+    {
         isVertical = false;
         st = a;
         ed = b;
@@ -116,192 +132,225 @@ struct Edge{
 
         A = -dy;
         B = dx;
-        C = st.x*dy - st.y*dx;
+        C = st.x * dy - st.y * dx;
 
-        if(fabs(dx)<eps)isVertical = true;
+        if (fabs(dx) < eps)
+            isVertical = true;
         isSegment = true;
     }
 
-    Edge(double _A, double _B, double _C){
-        st = Point(0.0,0.0); ed = Point(0.0,0.0); //keeping unspecified
+    Edge(double _A, double _B, double _C)
+    {
+        st = Point(0.0, 0.0);
+        ed = Point(0.0, 0.0); // keeping unspecified
         isVertical = false;
         A = _A, B = _B, C = _C;
-        if(fabs(B)<eps)isVertical = true;
+        if (fabs(B) < eps)
+            isVertical = true;
         isSegment = false;
     }
 
-    bool is_Degenerate(){
+    bool is_Degenerate()
+    {
 
-        if(fabs(st.x-ed.x)<eps && fabs(st.y-ed.y)<eps && fabs(A)<eps && fabs(B)<eps)return true;
+        if (fabs(st.x - ed.x) < eps && fabs(st.y - ed.y) < eps && fabs(A) < eps && fabs(B) < eps)
+            return true;
         return false;
     }
 
-    double Point_to_Line_dis(Point p){
-        double num = fabs(A*p.x+B*p.y+C);
-        double denum = sqrt(sq(A)+sq(B));
+    double Point_to_Line_dis(Point p)
+    {
+        double num = fabs(A * p.x + B * p.y + C);
+        double denum = sqrt(sq(A) + sq(B));
 
-        return num/denum;
+        return num / denum;
     }
 
-    pair<bool, Point> Intersect(Edge l){
+    pair<bool, Point> Intersect(Edge l)
+    {
 
-        //first check if the lines are parallel
+        // first check if the lines are parallel
 
-        double val1 = A*l.B;
-        double val2 = B*l.A;
+        double val1 = A * l.B;
+        double val2 = B * l.A;
 
-        if(fabs(val1-val2)<eps){
-            //cout<<"does not intersect because parallel\n";
-             return make_pair(false,Point(0.0,0.0));
+        if (fabs(val1 - val2) < eps)
+        {
+            // cout<<"does not intersect because parallel\n";
+            return make_pair(false, Point(0.0, 0.0));
         }
 
-        double hor = val2-val1;
+        double hor = val2 - val1;
 
-        double xlob = C*l.B-B*l.C;
-        double ylob = A*l.C-C*l.A;
+        double xlob = C * l.B - B * l.C;
+        double ylob = A * l.C - C * l.A;
 
-        Point intersectionPoint(Point(xlob/hor,ylob/hor));
+        Point intersectionPoint(Point(xlob / hor, ylob / hor));
 
-        if(!isSegment && !l.isSegment)return make_pair(true,intersectionPoint);
+        if (!isSegment && !l.isSegment)
+            return make_pair(true, intersectionPoint);
 
-        else if(isSegment && !l.isSegment){
-            double dx = ed.x-st.x;
-            double dy = ed.y-st.y;
-            //cout<<"intersects at";
-            //intersectionPoint.print();
+        else if (isSegment && !l.isSegment)
+        {
+            double dx = ed.x - st.x;
+            double dy = ed.y - st.y;
+            // cout<<"intersects at";
+            // intersectionPoint.print();
 
-            double t=2.0;
+            double t = 2.0;
 
-            if(fabs(dy)<eps)
-                t = (intersectionPoint.x-st.x)/dx;
+            if (fabs(dy) < eps)
+                t = (intersectionPoint.x - st.x) / dx;
             else
-                t = (intersectionPoint.y-st.y)/dy;
+                t = (intersectionPoint.y - st.y) / dy;
 
-            //cout<<t<<"\n";
+            // cout<<t<<"\n";
 
-            if((fabs(t)<eps || fabs(t-1.0)<eps) || (t>0.0 && t<1.0))return make_pair(true,intersectionPoint);
-            else{
-                //cout<<"does not intersect because out of segment bound\n";
-                return make_pair(false,intersectionPoint);
+            if ((fabs(t) < eps || fabs(t - 1.0) < eps) || (t > 0.0 && t < 1.0))
+                return make_pair(true, intersectionPoint);
+            else
+            {
+                // cout<<"does not intersect because out of segment bound\n";
+                return make_pair(false, intersectionPoint);
             }
         }
 
-        else if(!isSegment && l.isSegment){
-            double dx = l.ed.x-l.st.x;
-            double dy = l.ed.y-l.st.y;
+        else if (!isSegment && l.isSegment)
+        {
+            double dx = l.ed.x - l.st.x;
+            double dy = l.ed.y - l.st.y;
 
-            double t=2.0;
+            double t = 2.0;
 
-            if(fabs(dy)<eps)
-                t = (intersectionPoint.x-l.st.x)/dx;
+            if (fabs(dy) < eps)
+                t = (intersectionPoint.x - l.st.x) / dx;
             else
-                t = (intersectionPoint.y-l.st.y)/dy;
+                t = (intersectionPoint.y - l.st.y) / dy;
 
-            if((fabs(t)<eps || fabs(t-1.0)<eps) || (t>0.0 && t<1.0))return make_pair(true,intersectionPoint);
-            else{
-                //cout<<"does not intersect because out of segment bound\n";
-                return make_pair(false,intersectionPoint);
+            if ((fabs(t) < eps || fabs(t - 1.0) < eps) || (t > 0.0 && t < 1.0))
+                return make_pair(true, intersectionPoint);
+            else
+            {
+                // cout<<"does not intersect because out of segment bound\n";
+                return make_pair(false, intersectionPoint);
             }
         }
 
-        //this is unreachable
-        cout<<"unreachable code\n";
-        return make_pair(false,Point(0.0,0.0));
-
+        // this is unreachable
+        cout << "unreachable code\n";
+        return make_pair(false, Point(0.0, 0.0));
     }
 
-    Edge findPerpendicularBisector(){ //must be a segment
+    Edge findPerpendicularBisector()
+    { // must be a segment
 
-        double mx = (st.x+ed.x)/2.0;
-        double my = (st.y+ed.y)/2.0;
+        double mx = (st.x + ed.x) / 2.0;
+        double my = (st.y + ed.y) / 2.0;
 
         double newA = -B;
         double newB = A;
-        double newC = -(newA*mx+newB*my);
+        double newC = -(newA * mx + newB * my);
 
-        Edge perp(newA,newB,newC);
+        Edge perp(newA, newB, newC);
 
         return perp;
     }
 
-    int getSide(Point p){
+    int getSide(Point p)
+    {
 
-        double val = A*p.x + B*p.y + C;
+        double val = A * p.x + B * p.y + C;
 
-        if(fabs(val)<eps)return 0;
+        if (fabs(val) < eps)
+            return 0;
 
-        if(val<0.0)return LEFT;
+        if (val < 0.0)
+            return LEFT;
 
         return RIGHT;
-
     }
 
-    void clip(Point p, int keep_Start){
-        if(keep_Start==1){
+    void clip(Point p, int keep_Start)
+    {
+        if (keep_Start == 1)
+        {
             ed = p;
         }
-        else{
+        else
+        {
             st = p;
         }
     }
 
-    void print(string name){
-        if(isSegment){
-            cout<<name<<" is a segment with endpoints ";
+    void print(string name)
+    {
+        if (isSegment)
+        {
+            cout << name << " is a segment with endpoints ";
             st.print();
-            cout<<" and ";
+            cout << " and ";
             ed.print();
-            cout<<"\n";
+            cout << "\n";
         }
-        else{
-            cout<<name<<" is a line "<<A<<"x+"<<B<<"y+"<<C<<"\n";
+        else
+        {
+            cout << name << " is a line " << A << "x+" << B << "y+" << C << "\n";
         }
     }
-
 };
 
-
-struct Cell{
+struct Cell
+{
 
     Point site;
-    vector<Edge>regionEdges;
+    vector<Edge> regionEdges;
 
-    Cell(Point centroid){
+    Cell(Point centroid)
+    {
         site = centroid;
     }
 
-    void addEdge(Edge e){
+    void addEdge(Edge e)
+    {
 
-        if(!e.is_Degenerate()){
+        if (!e.is_Degenerate())
+        {
 
             bool flag = true;
-            for(Edge f: regionEdges){
+            for (Edge f : regionEdges)
+            {
 
                 Point x = f.st;
                 Point y = f.ed;
 
-                if( x.dist(e.st)<eps && y.dist(e.ed)<eps ){
+                if (x.dist(e.st) < eps && y.dist(e.ed) < eps)
+                {
                     flag = false;
                     break;
                 }
 
-                else if(x.dist(e.ed)<eps && y.dist(e.st)<eps){
+                else if (x.dist(e.ed) < eps && y.dist(e.st) < eps)
+                {
                     flag = false;
                     break;
                 }
             }
 
-            if(flag)regionEdges.push_back(e);
+            if (flag)
+                regionEdges.push_back(e);
         }
     }
 
-    void print(int id){
+    void print(int id)
+    {
 
-        if(regionEdges.size() <= 0) return;
+        if (regionEdges.size() <= 0)
+            return;
 
-        vector<Point>all_p;
+        vector<Point> all_p;
 
-        for(Edge e: regionEdges){
+        for (Edge e : regionEdges)
+        {
             all_p.push_back(e.st);
             all_p.push_back(e.ed);
         }
@@ -309,75 +358,85 @@ struct Cell{
         vector<Point> poly_p = sortVerticies(all_p);
 
         fout << "[ ";
-        for(int i = 0; i<poly_p.size(); ++i){
+        for (int i = 0; i < poly_p.size(); ++i)
+        {
             Point p1 = poly_p[i];
-            fout<< "(" << p1.x<<","<<p1.y<<")";
-            if (i == poly_p.size() - 1) fout << "]";
-            else fout << ", ";
+            fout << "(" << p1.x << "," << p1.y << ")";
+            if (i == poly_p.size() - 1)
+                fout << "]";
+            else
+                fout << ", ";
         }
 
         fout << endl;
-        //fout.close();
+        // fout.close();
     }
-    void print_console(int id){
-        //ofstream fout("test.out");
+    void print_console(int id)
+    {
+        // ofstream fout("test.out");
 
-        //fout<<"Printing cell info id: "<<id<<"\n";
-        //fout<<"Site Point is: "<<site.x<<","<<site.y<<"\n";
-        if(regionEdges.size() <= 0) return;
-
+        // fout<<"Printing cell info id: "<<id<<"\n";
+        // fout<<"Site Point is: "<<site.x<<","<<site.y<<"\n";
+        if (regionEdges.size() <= 0)
+            return;
 
         cout << "[ ";
-        for(int i = 0; i<regionEdges.size(); ++i){
+        for (int i = 0; i < regionEdges.size(); ++i)
+        {
             Edge e = regionEdges[i];
             Point p1 = e.st;
             Point p2 = e.ed;
-            cout<< "(" << p1.x<<","<<p1.y<<"), ("<<p2.x<<","<<p2.y<<")";
-            if (i == regionEdges.size() - 1) cout << "]";
-            else cout << ", ";
+            cout << "(" << p1.x << "," << p1.y << "), (" << p2.x << "," << p2.y << ")";
+            if (i == regionEdges.size() - 1)
+                cout << "]";
+            else
+                cout << ", ";
         }
 
         cout << endl;
-        //fout.close();
+        // fout.close();
     }
 };
 
-vector<Point>S;
-vector<Edge>E;
-vector<Cell>C;
+vector<Point> S;
+vector<Edge> E;
+vector<Cell> C;
 
-void takeSitePoints(int n){
-    for(int i = 1; i<=n; ++i){
+void takeSitePoints(int n)
+{
+    for (int i = 1; i <= n; ++i)
+    {
 
-        double x,y;
-        scanf("%lf %lf",&x,&y);
+        double x, y;
+        scanf("%lf %lf", &x, &y);
 
-        S.push_back(Point(x,y));
+        S.push_back(Point(x, y));
     }
 }
 
-void add_boundary_Cells(double width, double height){
-//[(width/2, -10*height), (-10*width, height/2)]
-//[(-10*width, height/2), (width/2, height/2)].
-    Cell c1(Point(-width,-height));
-    c1.addEdge(Edge(Point(width/2.0, height/2.0),Point(width/2.0,-BORDER_DIS*height)));
-    c1.addEdge(Edge(Point(width/2.0,-BORDER_DIS*height),Point(-BORDER_DIS*width,height/2.0)));
-    c1.addEdge(Edge(Point(-BORDER_DIS*width,height/2.0),Point(width/2.0,height/2.0)));
+void add_boundary_Cells(double width, double height)
+{
+    //[(width/2, -10*height), (-10*width, height/2)]
+    //[(-10*width, height/2), (width/2, height/2)].
+    Cell c1(Point(-width, -height));
+    c1.addEdge(Edge(Point(width / 2.0, height / 2.0), Point(width / 2.0, -BORDER_DIS * height)));
+    c1.addEdge(Edge(Point(width / 2.0, -BORDER_DIS * height), Point(-BORDER_DIS * width, height / 2.0)));
+    c1.addEdge(Edge(Point(-BORDER_DIS * width, height / 2.0), Point(width / 2.0, height / 2.0)));
 
-    Cell c2(Point(2.0*width,-height));
-    c2.addEdge(Edge(Point(width/2.0, height/2.0),Point(width/2.0,-BORDER_DIS*height)));
-    c2.addEdge(Edge(Point(width/2.0,-BORDER_DIS*height),Point(BORDER_DIS*width,height/2.0)));
-    c2.addEdge(Edge(Point(BORDER_DIS*width,height/2.0),Point(width/2.0,height/2.0)));
+    Cell c2(Point(2.0 * width, -height));
+    c2.addEdge(Edge(Point(width / 2.0, height / 2.0), Point(width / 2.0, -BORDER_DIS * height)));
+    c2.addEdge(Edge(Point(width / 2.0, -BORDER_DIS * height), Point(BORDER_DIS * width, height / 2.0)));
+    c2.addEdge(Edge(Point(BORDER_DIS * width, height / 2.0), Point(width / 2.0, height / 2.0)));
 
-    Cell c3(Point(2.0*width,2.0*height));
-    c3.addEdge(Edge(Point(BORDER_DIS*width,height/2.0),Point(width/2.0,height/2.0)));
-    c3.addEdge(Edge(Point(width/2.0, height/2.0),Point(width/2.0,BORDER_DIS*height)));
-    c3.addEdge(Edge(Point(width/2.0,BORDER_DIS*height),Point(BORDER_DIS*width,height/2.0)));
+    Cell c3(Point(2.0 * width, 2.0 * height));
+    c3.addEdge(Edge(Point(BORDER_DIS * width, height / 2.0), Point(width / 2.0, height / 2.0)));
+    c3.addEdge(Edge(Point(width / 2.0, height / 2.0), Point(width / 2.0, BORDER_DIS * height)));
+    c3.addEdge(Edge(Point(width / 2.0, BORDER_DIS * height), Point(BORDER_DIS * width, height / 2.0)));
 
-    Cell c4(Point(-width,2.0*height));
-    c4.addEdge(Edge(Point(width/2.0, height/2.0),Point(width/2.0,BORDER_DIS*height)));
-    c4.addEdge(Edge(Point(width/2.0,BORDER_DIS*height),Point(-BORDER_DIS*width,height/2.0)));
-    c4.addEdge(Edge(Point(-BORDER_DIS*width,height/2.0),Point(width/2.0,height/2.0)));
+    Cell c4(Point(-width, 2.0 * height));
+    c4.addEdge(Edge(Point(width / 2.0, height / 2.0), Point(width / 2.0, BORDER_DIS * height)));
+    c4.addEdge(Edge(Point(width / 2.0, BORDER_DIS * height), Point(-BORDER_DIS * width, height / 2.0)));
+    c4.addEdge(Edge(Point(-BORDER_DIS * width, height / 2.0), Point(width / 2.0, height / 2.0)));
 
     C.push_back(c1);
     C.push_back(c2);
@@ -385,83 +444,99 @@ void add_boundary_Cells(double width, double height){
     C.push_back(c4);
 }
 
-bool isSameSide_not_Intersect(int cside, int startside, int endside){
-    if(startside==0 && endside==0)return false;
-    if(startside==0)return cside==endside;
-    return cside==startside;
+bool isSameSide_not_Intersect(int cside, int startside, int endside)
+{
+    if (startside == 0 && endside == 0)
+        return false;
+    if (startside == 0)
+        return cside == endside;
+    return cside == startside;
 }
 
-void process_new_site(Point site){
-    //cout<<"\n\n\n";
-    Cell newcell(site); //line 4
-    //cout<<"checking diagram for new site ";
-    //site.print();
-    //cout<<"\n";
+void process_new_site(Point site)
+{
+    // cout<<"\n\n\n";
+    Cell newcell(site); // line 4
+    // cout<<"checking diagram for new site ";
+    // site.print();
+    // cout<<"\n";
     int op = 0;
-    for(int i = 0; i<C.size(); ++i){ //line 5
+    for (int i = 0; i < C.size(); ++i)
+    { // line 5
         Cell c = C[i];
-        //cout<<"\n\n";
+        // cout<<"\n\n";
         op++;
-        Edge seg(c.site,site);
-        //seg.print("line_segment_connecting_two_sites");
+        Edge seg(c.site, site);
+        // seg.print("line_segment_connecting_two_sites");
         Edge pb = seg.findPerpendicularBisector();
-        //pb.print("perpendicular_bisector"); //line 6 -> upto this seems correct
+        // pb.print("perpendicular_bisector"); //line 6 -> upto this seems correct
 
-        vector<Point>X; //line 7
-        vector<int>toDelete;
+        vector<Point> X; // line 7
+        vector<int> toDelete;
 
-        for(int i = 0; i<(int)c.regionEdges.size(); ++i){
-            //cout<<"\n";
-            //cout<<"Will test spatial relationship\n";
+        for (int i = 0; i < (int)c.regionEdges.size(); ++i)
+        {
+            // cout<<"\n";
+            // cout<<"Will test spatial relationship\n";
             Edge e = c.regionEdges[i];
-            //e.print("cell_edge_e");
-            //each e is a segment
-            pair<bool,Point>Ipoint = e.Intersect(pb);
+            // e.print("cell_edge_e");
+            // each e is a segment
+            pair<bool, Point> Ipoint = e.Intersect(pb);
 
-            if(Ipoint.first==false){
-                //cout<<"edge and pb does not intersect, so both endpoint must be in same side\n";
-                //does not intersect...
-                //if both in same side as c site then keep the edge
+            if (Ipoint.first == false)
+            {
+                // cout<<"edge and pb does not intersect, so both endpoint must be in same side\n";
+                // does not intersect...
+                // if both in same side as c site then keep the edge
                 int cside = pb.getSide(c.site);
-                int edgestartside = pb.getSide(e.st); //e.ed will also be in the same side
+                int edgestartside = pb.getSide(e.st); // e.ed will also be in the same side
                 int edgeendside = pb.getSide(e.ed);
 
-                if( !isSameSide_not_Intersect(cside,edgestartside,edgeendside) ){
-                    //c.site.print();
-                    //cout<<" is not in the same side as ";
-                    //e.st.print();
-                    //cout<<" with respect to pb\n";
-                    //delete this e
+                if (!isSameSide_not_Intersect(cside, edgestartside, edgeendside))
+                {
+                    // c.site.print();
+                    // cout<<" is not in the same side as ";
+                    // e.st.print();
+                    // cout<<" with respect to pb\n";
+                    // delete this e
                     toDelete.push_back(i);
-                    //cout<<"will delete this edge\n";
+                    // cout<<"will delete this edge\n";
                 }
-                //if both in same side as site then delete the edge
+                // if both in same side as site then delete the edge
             }
-            else{
-                //cout<<"edge and pb intersects at ";
-                //Ipoint.second.print();
-                //cout<<"\n";
-                //intersects.. so, start and end point of edge e will change
+            else
+            {
+                // cout<<"edge and pb intersects at ";
+                // Ipoint.second.print();
+                // cout<<"\n";
+                // intersects.. so, start and end point of edge e will change
                 int cside = pb.getSide(c.site);
                 int edgestartside = pb.getSide(e.st);
                 int edgeendside = pb.getSide(e.ed);
-                //this two will be in different sides with respect to cside
+                // this two will be in different sides with respect to cside
 
-                if(edgestartside==0){
-                    //either do nothing or delete
-                    if(cside!=edgeendside)toDelete.push_back(i);
+                if (edgestartside == 0)
+                {
+                    // either do nothing or delete
+                    if (cside != edgeendside)
+                        toDelete.push_back(i);
                 }
-                else if(edgeendside==0){
-                    //similar case
-                    if(cside!=edgestartside)toDelete.push_back(i);
+                else if (edgeendside == 0)
+                {
+                    // similar case
+                    if (cside != edgestartside)
+                        toDelete.push_back(i);
                 }
-                else{
-                    //intersects somewhere middle.. so need to clip
-                    if(cside==edgestartside)e.clip(Ipoint.second,1);
-                    else e.clip(Ipoint.second,0);
+                else
+                {
+                    // intersects somewhere middle.. so need to clip
+                    if (cside == edgestartside)
+                        e.clip(Ipoint.second, 1);
+                    else
+                        e.clip(Ipoint.second, 0);
 
-                    //cout<<"edge is clipped to be ";
-                    //e.print("cell_edge_e");
+                    // cout<<"edge is clipped to be ";
+                    // e.print("cell_edge_e");
                     c.regionEdges[i] = e;
                 }
 
@@ -469,10 +544,11 @@ void process_new_site(Point site){
             }
         }
 
-        for(int i = toDelete.size()-1; i>=0; --i){
-            //cout<<"deleting...............\n";
+        for (int i = toDelete.size() - 1; i >= 0; --i)
+        {
+            // cout<<"deleting...............\n";
             int curdelIdx = toDelete[i];
-            c.regionEdges.erase(c.regionEdges.begin()+curdelIdx);
+            c.regionEdges.erase(c.regionEdges.begin() + curdelIdx);
         }
 
         /*cout<<"intersection vector size "<<(int)X.size()<<"\n";
@@ -485,12 +561,15 @@ void process_new_site(Point site){
         }
         cout<<"intersection set size "<<(int)X.size()<<"\n";*/
 
-        for(int i = 0; i<X.size(); ++i){
-            for(int j = (i+1); j<X.size(); ++j){
+        for (int i = 0; i < X.size(); ++i)
+        {
+            for (int j = (i + 1); j < X.size(); ++j)
+            {
                 Point p1 = X[i];
                 Point p2 = X[j];
-                if(fabs(p1.dist(p2))>eps){
-                    Edge divider(p1,p2);
+                if (fabs(p1.dist(p2)) > eps)
+                {
+                    Edge divider(p1, p2);
                     newcell.addEdge(divider);
                     c.addEdge(divider);
                 }
@@ -498,43 +577,47 @@ void process_new_site(Point site){
         }
 
         C[i] = c;
-        //cout<<"cell status\n";
-        //C[i].print_console(-1);
-        //cout<<"\n";
+        // cout<<"cell status\n";
+        // C[i].print_console(-1);
+        // cout<<"\n";
 
-        //cout<<"newcell status\n";
-        //newcell.print_console(-1);
-        //cout<<"\n";
+        // cout<<"newcell status\n";
+        // newcell.print_console(-1);
+        // cout<<"\n";
     }
-    //cout<<op<<"\n";
+    // cout<<op<<"\n";
     C.push_back(newcell);
     return;
 }
 
-void add_initial_site(double width, double height){
+void add_initial_site(double width, double height)
+{
     Cell c1(S[0]);
-    c1.addEdge(Edge(Point(0,0),Point(0,width)));
-    c1.addEdge(Edge(Point(0,width),Point(width,height)));
-    c1.addEdge(Edge(Point(width,height),Point(0,height)));
-    c1.addEdge(Edge(Point(0,height),Point(0,0)));
+    c1.addEdge(Edge(Point(0, 0), Point(0, width)));
+    c1.addEdge(Edge(Point(0, width), Point(width, height)));
+    c1.addEdge(Edge(Point(width, height), Point(0, height)));
+    c1.addEdge(Edge(Point(0, height), Point(0, 0)));
     C.push_back(c1);
 }
 
-int main(){
-    int n,width,height;
-    scanf("%d %d %d",&n,&width,&height);
-    takeSitePoints(n); //line 1-2
+int main()
+{
+    int n, width, height;
+    scanf("%d %d %d", &n, &width, &height);
+    takeSitePoints(n); // line 1-2
 
-    add_boundary_Cells(width,height);
+    add_boundary_Cells(width, height);
 
-    //add_initial_site(width,height);
+    // add_initial_site(width,height);
 
-    for(int i = 0; i<S.size(); ++i){
+    for (int i = 0; i < S.size(); ++i)
+    {
         process_new_site(S[i]);
     }
 
-    //C now should contain all voronoi cells
-    for(int i = 0; i<C.size(); ++i){
+    // C now should contain all voronoi cells
+    for (int i = 0; i < C.size(); ++i)
+    {
         C[i].print(i);
     }
 
